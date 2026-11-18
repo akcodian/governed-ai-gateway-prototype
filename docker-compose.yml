@@ -1,0 +1,106 @@
+# Governed AI gateway prototype - single-machine stack. All images pinned by tag and digest.
+name: gaigw
+
+x-py: &py
+  build: {context: ., dockerfile: docker/python.Dockerfile}
+  image: gaigw-python:local
+  user: "0"            # bind-mounted folders on Docker Desktop are root-owned
+  environment: &pyenv
+    GOV_KEY_DIR: /app/keys
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  volumes:
+    - ./keys:/app/keys:ro
+
+services:
+  opa:
+    image: openpolicyagent/opa:1.22.4-static@sha256:12cecac5a174368f7d3f09d3a19d040ebe0c91d576e520335ae7a985a26e39d3
+    command: ["run", "--server", "--addr=0.0.0.0:8181", "--log-level=error"]
+    ports: ["8181:8181"]
+
+  redis:
+    image: redis:8.8.4-alpine@sha256:1273af45b299d2b8b60d0e400d90aa6c2c5b1794f01d6a7ca60ff3ba6e65efb5
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports: ["6379:6379"]
+    healthcheck: {test: ["CMD", "redis-cli", "ping"], interval: 2s, timeout: 2s, retries: 30}
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.165.0@sha256:e40d61f10c9a617cca1ffd1be4d7e2b3a4b0f0001798ff07e58cabe82e618cea
+    user: "0"
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./telemetry/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+      - ./telemetry/out:/out
+    ports: ["4318:4318", "13133:13133"]
+
+  model-server:
+    <<: *py
+    command: ["python", "-m", "mocks.model_server.server"]
+    environment: {<<: *pyenv, PORT: "8100"}
+    ports: ["8100:8100"]
+
+  mcp-server:
+    <<: *py
+    command: ["python", "-m", "mocks.mcp_server.server"]
+    environment: {<<: *pyenv, PORT: "8200"}
+    ports: ["8200:8200"]
+
+  agent-b:
+    <<: *py
+    command: ["python", "-m", "mocks.a2a_agents.agent"]
+    environment: {<<: *pyenv, PORT: "8301", AGENT_ID: agent-b, PUBLIC_URL: "http://agent-b:8301",
+                  GATEWAY_URL: "http://gateway:8080"}
+    ports: ["8301:8301"]
+
+  agent-c:
+    <<: *py
+    command: ["python", "-m", "mocks.a2a_agents.agent"]
+    environment: {<<: *pyenv, PORT: "8302", AGENT_ID: agent-c, PUBLIC_URL: "http://agent-c:8302",
+                  GATEWAY_URL: "http://gateway:8080"}
+    ports: ["8302:8302"]
+
+  approval-service:
+    <<: *py
+    command: ["python", "-m", "approval_service.app"]
+    environment: {<<: *pyenv, PORT: "8090", GATEWAY_URL: "http://gateway:8080", APPROVAL_DB: /data/approvals.db,
+                  GOV_EVIDENCE_DIR: /app/evidence, HOLD_TIMEOUT_SECONDS: "600"}
+    volumes:
+      - ./keys:/app/keys:ro
+      - ./evidence:/app/evidence
+      - approval-data:/data
+    ports: ["8090:8090"]
+
+  gateway:
+    <<: *py
+    command: ["python", "-m", "gateway.app"]
+    environment: {<<: *pyenv, PORT: "8080", OPA_URL: "http://opa:8181", REDIS_URL: "redis://redis:6379/0",
+                  APPROVAL_URL: "http://approval-service:8090", GOV_SNAPSHOT_DIR: /app/control-plane/build,
+                  GOV_EVIDENCE_DIR: /app/evidence, GATEWAY_REGION: eu-west, CB_RESET_SECONDS: "30",
+                  LOG_LEVEL: WARNING}
+    volumes:
+      - ./keys:/app/keys:ro
+      - ./control-plane/build:/app/control-plane/build:ro
+      - ./evidence:/app/evidence
+    ports: ["8080:8080"]
+    depends_on:
+      redis: {condition: service_healthy}
+      opa: {condition: service_started}
+      otel-collector: {condition: service_started}
+      model-server: {condition: service_started}
+      approval-service: {condition: service_started}
+
+  # Benchmark client, run inside the compose network (`make bench`). Running it from the host would
+  # add Docker Desktop port-forwarding latency (~44 ms per request on Windows) to both paths.
+  bench:
+    <<: *py
+    profiles: ["bench"]
+    working_dir: /work
+    command: ["python", "-m", "bench.run"]
+    environment: {GOV_KEY_DIR: /work/keys, BENCH_GATEWAY_URL: "http://gateway:8080",
+                  BENCH_APPROVAL_URL: "http://approval-service:8090", BENCH_MODEL_URL: "http://model-server:8100",
+                  BENCH_MCP_URL: "http://mcp-server:8200", BENCH_REDIS_HOST: redis}
+    volumes:
+      - .:/work
+    depends_on: [gateway]
+
+volumes:
+  approval-data:

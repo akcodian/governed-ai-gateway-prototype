@@ -1,0 +1,9 @@
+.venv
+.tools
+.git
+keys
+evidence
+telemetry/out
+control-plane/build
+results
+**/__pycache__

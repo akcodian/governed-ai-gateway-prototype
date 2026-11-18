@@ -1,0 +1,42 @@
+# OpenTelemetry Collector (contrib): OTLP/HTTP in, JSON files out. No external backend.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 200ms
+    send_batch_size: 512
+
+exporters:
+  file/traces:
+    path: /out/spans.jsonl
+    flush_interval: 500ms
+  file/logs:
+    path: /out/logs.jsonl
+    flush_interval: 500ms
+  file/metrics:
+    path: /out/metrics.jsonl
+    flush_interval: 1s
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [file/traces]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [file/logs]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [file/metrics]
