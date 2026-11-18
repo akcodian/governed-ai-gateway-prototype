@@ -1,0 +1,17 @@
+concurrency,stage,n,p50_ms,p95_ms
+1,gateway.identify,1000,0.609,1.023
+1,gateway.authorize,1000,2.379,3.859
+1,gateway.budget,1000,0.737,1.146
+1,gateway.route,1000,2.497,4.078
+1,gateway.guard,1000,0.087,0.152
+1,gateway.request,1000,9.339,17.105
+1,gateway.upstream,1000,2.156,3.346
+1,governance_total,1000,6.371,11.751
+10,gateway.identify,1000,0.626,1.246
+10,gateway.authorize,1000,30.582,93.428
+10,gateway.budget,1000,3.953,8.320
+10,gateway.route,1000,32.373,95.698
+10,gateway.guard,1000,0.091,0.163
+10,gateway.request,1000,99.379,188.270
+10,gateway.upstream,1000,19.142,44.317
+10,governance_total,1000,76.536,158.454

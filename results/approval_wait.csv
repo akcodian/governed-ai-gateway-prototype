@@ -1,0 +1,2 @@
+scenario,hold_id,approver,approval_wait_ms,note
+S4a,hold-bd51bf4d5c614c92,sim-approver-01,1966.5,simulated approver with 0.5 s think time; excluded from gateway latency

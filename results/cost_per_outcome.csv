@@ -1,0 +1,14 @@
+level,key,business_unit,team,period,spend_usd,requests,outcomes,kpi_names,cost_per_outcome_usd
+business_unit,bu-finance,bu-finance,,2026-11,0.11506200000000104,431,0,,
+business_unit,bu-operations,bu-operations,,2026-11,0.7329260000000171,2671,4,,0.18323150000000427
+business_unit,bu-sandbox,bu-sandbox,,2026-11,0.006062999999999986,213,0,,
+team,team-claims,bu-operations,team-claims,2026-11,0.687371000000017,2660,4,,0.17184275000000426
+team,team-reporting,bu-finance,team-reporting,2026-11,0.11506200000000104,431,0,,
+team,team-research-agents,bu-operations,team-research-agents,2026-11,0.045398999999999995,5,0,,
+team,team-sandbox-lab,bu-sandbox,team-sandbox-lab,2026-11,0.006062999999999986,213,0,,
+team,team-service-desk,bu-operations,team-service-desk,2026-11,0.000156,6,0,,
+use_case,UC-01,bu-sandbox,team-sandbox-lab,2026-11,0.006062999999999986,213,0,,
+use_case,UC-17,bu-operations,team-claims,2026-11,0.687371000000017,2660,4,claims_triaged,0.17184275000000426
+use_case,UC-22,bu-operations,team-service-desk,2026-11,0.000156,6,0,,
+use_case,UC-30,bu-operations,team-research-agents,2026-11,0.045398999999999995,5,0,,
+use_case,UC-40,bu-finance,team-reporting,2026-11,0.11506200000000104,431,0,,

@@ -3,6 +3,7 @@ Every number comes from files written by code in this repository; missing inputs
 from __future__ import annotations
 
 import csv
+import os
 import datetime as dt
 import subprocess
 from pathlib import Path
@@ -43,7 +44,8 @@ def main() -> None:
     lat = {r["scenario"]: r for r in read("scenario_latency.csv")}
     out = ["# Results summary", "",
            f"Generated {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} by `make report`. "
-           f"Commit `{git('rev-parse', '--short', 'HEAD') or 'n/a'}`; tag `{git('describe', '--tags', '--exact-match') or 'none yet'}`.",
+           f"Results produced by code at commit `{git('rev-parse', '--short', 'HEAD') or 'n/a'}`; "
+           f"paper tag `{os.environ.get('PAPER_TAG') or git('describe', '--tags', '--exact-match') or 'none yet'}`.",
            "", "All numbers below come from runs of the code in this repository (see results/*.csv). "
            "Mocks run on one machine. Latencies are measured by a benchmark client inside the Docker compose network "
            "(running it from the Windows host adds ~44 ms of Docker Desktop port-forwarding to every request).", "",

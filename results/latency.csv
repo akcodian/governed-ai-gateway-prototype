@@ -1,0 +1,9 @@
+path,concurrency,n,p50_ms,p95_ms,mean_ms
+direct,1,1000,1.351,2.298,1.515
+gateway,1,1000,11.752,22.756,13.006
+added_by_gateway (gateway - direct),1,1000,10.401,20.458,11.491
+direct,10,1000,11.064,18.192,24.211
+gateway,10,1000,105.736,193.778,115.257
+added_by_gateway (gateway - direct),10,1000,94.673,175.586,91.045
+gateway_s3_fallback,1,200,12.798,24.355,13.986
+gateway_s5_skip_expired,1,200,12.114,22.114,13.360

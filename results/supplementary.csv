@@ -1,0 +1,8 @@
+scenario,expected,observed,pass,evidence_completeness_pct,failed_checks,missing_attributes
+tool_quarantine,changed tool definition -> deny tool_definition_changed; tool quarantined,call -> 403 tool_definition_changed; tools/list -> []; after restore still 403,pass,,,
+hop_limit,delegation beyond hop limit 3 denied (hop_limit_exceeded),"delegation hops seen [1, 2, 3, 4]; denied at hop 4",pass,,,
+snapshot_tamper,bad signature rejected; gateway keeps serving last known good,tampered -> 409 bad_signature; stale -> 409 stale_config_version; serving v10; UC-17 -> 200,pass,,,
+pairing_signature_tamper,entry with bad pairing signature rejected at route time,served by model-b rank 2 reason pairing_signature_invalid; restored v12,pass,,,
+redis_fail_modes,"Redis down: fail_mode closed refuses (UC-17), fail_mode open allows and logs (UC-01)",UC-01 (open) -> 200 fail_open; UC-17 (closed) -> 429 budget_store_unavailable,pass,,,
+evidence_tamper,"edit, deletion, or truncation of the evidence chain detected","intact=True; edit -> line 2: prev_hash mismatch (chain broken; an earlier line was edited or removed); delete -> line 1: prev_hash mismatch (chain broken; an earlier line was edited or removed); truncate -> head mismatch: head says 56 lines, file has 55 (tail edited or truncated)",pass,,,
+observation_mode,new deny rule in observation mode records would_deny and does not block,HTTP 200 decision=allow would_deny=max_tokens_cap,pass,,,

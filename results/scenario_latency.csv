@@ -1,0 +1,9 @@
+scenario,decision,n,p50_ms,p95_ms,status_ok
+S1,allow,200,14.321,27.283,True
+S2,deny,200,8.009,14.994,True
+S3,allow (fallback rank 2),200,13.003,24.758,True
+S4a,hold (time to HTTP 202),200,41.725,55.448,True
+S4b,degrade,200,13.417,24.571,True
+S5,allow (skip expired rank 1),200,11.962,22.115,True
+S6,deny (tools/call update_case),200,56.598,69.594,True
+S7,"deny (root budget, 429)",200,7.310,13.229,True
