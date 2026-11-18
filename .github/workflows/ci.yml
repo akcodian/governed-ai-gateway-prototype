@@ -1,0 +1,19 @@
+name: ci
+on: [push, pull_request]
+
+jobs:
+  compile-and-unit-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Setup (venv, pinned OPA, ephemeral keys, pairing approvals)
+        run: make setup BOOT_PY=python
+      - name: Compile control plane (schemas, opa test, promotion rules, signed snapshot)
+        run: make compile
+      - name: Unit tests
+        run: make test-unit
+      - name: Verify evidence chain written by the compiler
+        run: make verify-evidence
