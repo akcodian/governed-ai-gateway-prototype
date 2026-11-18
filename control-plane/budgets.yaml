@@ -1,0 +1,49 @@
+# R5: budget tree org > business_unit > team > use_case > user (synthetic USD).
+# Semantics enforced atomically in Redis (gateway/stages/budget.py):
+#   * a node may never exceed its burst ceiling (ceiling_usd);
+#   * spend up to the guaranteed floor (floor_usd) is honoured without checking ancestors;
+#   * spend above the floor needs headroom in every ancestor (checked up to the next floor).
+#   * monthly_usd is the planned allotment; spend between monthly_usd and ceiling_usd is "burst".
+# tokens_per_minute is per model (key `default` applies to models without an entry).
+# fail_mode applies to the node's limits when the counter store (Redis) is unreachable.
+defaults:
+  root_request_budget_tokens: 5000       # agentic use cases (configurable per use case below)
+  user:                                   # applied to every user node under a use case
+    monthly_usd: 50
+    floor_usd: 0
+    ceiling_usd: 100
+    tokens_per_minute: {default: 1000000}
+    fail_mode: open
+
+nodes:
+  - {id: org, level: org, parent: null, monthly_usd: 100000, floor_usd: 0, ceiling_usd: 100000,
+     tokens_per_minute: {default: 50000000}, fail_mode: open}
+
+  - {id: bu-sandbox, level: business_unit, parent: org, monthly_usd: 500, floor_usd: 100, ceiling_usd: 1000,
+     tokens_per_minute: {default: 1000000}, fail_mode: open}
+  - {id: team-sandbox-lab, level: team, parent: bu-sandbox, monthly_usd: 200, floor_usd: 50, ceiling_usd: 400,
+     tokens_per_minute: {default: 1000000}, fail_mode: open}
+  - {id: UC-01, level: use_case, parent: team-sandbox-lab, monthly_usd: 50, floor_usd: 10, ceiling_usd: 100,
+     tokens_per_minute: {default: 1000000}, fail_mode: open}
+
+  - {id: bu-operations, level: business_unit, parent: org, monthly_usd: 20000, floor_usd: 5000, ceiling_usd: 30000,
+     tokens_per_minute: {default: 20000000}, fail_mode: closed}
+  - {id: team-claims, level: team, parent: bu-operations, monthly_usd: 5000, floor_usd: 1000, ceiling_usd: 8000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed}
+  - {id: UC-17, level: use_case, parent: team-claims, monthly_usd: 3000, floor_usd: 500, ceiling_usd: 5000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed}
+  - {id: team-service-desk, level: team, parent: bu-operations, monthly_usd: 5000, floor_usd: 1000, ceiling_usd: 8000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed}
+  - {id: UC-22, level: use_case, parent: team-service-desk, monthly_usd: 3000, floor_usd: 500, ceiling_usd: 5000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed}
+  - {id: team-research-agents, level: team, parent: bu-operations, monthly_usd: 3000, floor_usd: 500, ceiling_usd: 5000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed}
+  - {id: UC-30, level: use_case, parent: team-research-agents, monthly_usd: 2000, floor_usd: 200, ceiling_usd: 3000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed, root_request_budget_tokens: 5000}
+
+  - {id: bu-finance, level: business_unit, parent: org, monthly_usd: 5000, floor_usd: 1000, ceiling_usd: 8000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed}
+  - {id: team-reporting, level: team, parent: bu-finance, monthly_usd: 2000, floor_usd: 500, ceiling_usd: 3000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed}
+  - {id: UC-40, level: use_case, parent: team-reporting, monthly_usd: 1000, floor_usd: 200, ceiling_usd: 2000,
+     tokens_per_minute: {default: 10000000}, fail_mode: closed}

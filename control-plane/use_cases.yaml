@@ -1,0 +1,81 @@
+# R1: use case registry. All names are synthetic.
+use_cases:
+  - id: UC-01
+    name: Sandbox summarizer experiment
+    owner: owner-0001
+    business_unit: bu-sandbox
+    team: team-sandbox-lab
+    risk_tier: low
+    data_classes: [internal]
+    interaction: interactive
+    agentic: false
+    state: sandbox
+    approved_by: null
+    approved_at: null
+    expires_at: "2030-12-31T23:59:59Z"
+    risk_review: null
+    workloads: [uc01-notebook]
+
+  - id: UC-17
+    name: Nightly claims-batch triage
+    owner: owner-0017
+    business_unit: bu-operations
+    team: team-claims
+    risk_tier: high
+    data_classes: [confidential]
+    interaction: batch
+    agentic: false
+    state: production
+    approved_by: approver-risk-01
+    approved_at: "2026-01-15T10:00:00Z"
+    expires_at: "2030-12-31T23:59:59Z"
+    risk_review: {ref: RR-2026-017, tier: high, date: "2026-01-10"}
+    workloads: [uc17-batch-runner]
+
+  - id: UC-22
+    name: Agent-assist chat for service desk
+    owner: owner-0022
+    business_unit: bu-operations
+    team: team-service-desk
+    risk_tier: medium
+    data_classes: [confidential]
+    interaction: interactive
+    agentic: false
+    state: production
+    approved_by: approver-risk-01
+    approved_at: "2026-02-01T10:00:00Z"
+    expires_at: "2030-12-31T23:59:59Z"
+    risk_review: {ref: RR-2026-022, tier: medium, date: "2026-01-25"}
+    workloads: [uc22-desk-app]
+
+  - id: UC-30
+    name: Case-research agent with tool use and delegation
+    owner: owner-0030
+    business_unit: bu-operations
+    team: team-research-agents
+    risk_tier: high
+    data_classes: [internal]
+    interaction: interactive
+    agentic: true
+    state: production
+    approved_by: approver-risk-02
+    approved_at: "2026-03-01T10:00:00Z"
+    expires_at: "2030-12-31T23:59:59Z"
+    risk_review: {ref: RR-2026-030, tier: high, date: "2026-02-20"}
+    workloads: [uc30-orchestrator, agent-b, agent-c]
+
+  - id: UC-40
+    name: Monthly report drafting batch
+    owner: owner-0040
+    business_unit: bu-finance
+    team: team-reporting
+    risk_tier: medium
+    data_classes: [internal]
+    interaction: batch
+    agentic: false
+    state: production
+    approved_by: approver-risk-02
+    approved_at: "2026-03-10T10:00:00Z"
+    expires_at: "2030-12-31T23:59:59Z"
+    risk_review: {ref: RR-2026-040, tier: medium, date: "2026-03-05"}
+    workloads: [uc40-report-batch]

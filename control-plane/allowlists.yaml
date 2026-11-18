@@ -1,0 +1,12 @@
+# R4: use case -> tools/actions and agents it may use.
+settings:
+  a2a_hop_limit: 3
+allowlists:
+  UC-30:
+    tools:
+      mcp-docs: [search_docs]          # read only; update_case (write) is deliberately absent
+    agents: [agent-b, agent-c]
+  UC-22:
+    tools:
+      mcp-docs: [search_docs, get_customer_summary]
+    agents: []

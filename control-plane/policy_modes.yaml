@@ -1,0 +1,4 @@
+# R6: enforcement mode per policy rule (deny reason). "observation" records `would_deny`
+# in spans and evidence without blocking; "enforce" blocks. Rules not listed are enforced.
+policy_modes:
+  max_tokens_cap: observation     # newly introduced rule, trialled in observation mode

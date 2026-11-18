@@ -1,0 +1,27 @@
+# R3: use case -> ranked models. Signatures are NOT stored here: `make approve-pairings`
+# signs each entry with the approving-function key (generated at setup, git-ignored) and the
+# compiler attaches the signatures from control-plane/build/pairing_approvals.json.
+pairings:
+  UC-01:
+    - {model: model-b, rank: 1, data_classes: [internal], regions: [eu-west], evaluation_ref: EVAL-UC01-B,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}
+  UC-17:
+    - {model: model-a, rank: 1, data_classes: [confidential], regions: [eu-west], evaluation_ref: EVAL-UC17-A,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}
+    - {model: model-b, rank: 2, data_classes: [confidential], regions: [eu-west], evaluation_ref: EVAL-UC17-B,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}
+  UC-22:
+    - {model: model-a, rank: 1, data_classes: [confidential], regions: [eu-west], evaluation_ref: EVAL-UC22-A,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}
+    - {model: model-b, rank: 2, data_classes: [confidential], regions: [eu-west], evaluation_ref: EVAL-UC22-B,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}
+  UC-30:
+    - {model: model-a, rank: 1, data_classes: [internal], regions: [eu-west], evaluation_ref: EVAL-UC30-A,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}
+    - {model: model-b, rank: 2, data_classes: [internal], regions: [eu-west], evaluation_ref: EVAL-UC30-B,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}
+  UC-40:
+    - {model: model-d, rank: 1, data_classes: [internal], regions: [eu-west], evaluation_ref: EVAL-UC40-D,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}
+    - {model: model-a, rank: 2, data_classes: [internal], regions: [eu-west], evaluation_ref: EVAL-UC40-A,
+       expires_at: "2030-12-31T23:59:59Z", approval: {approved_by: approving-function-ai-board}}

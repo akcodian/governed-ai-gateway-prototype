@@ -1,0 +1,18 @@
+# R4: A2A agents, registered from their Agent Cards by `make register` (python -m cp_compile.register).
+agents:
+- id: agent-b
+  base_url: http://agent-b:8301
+  name: agent-b
+  jsonrpc_url: http://agent-b:8301/a2a
+  protocol_version: '1.0'
+  skills:
+  - summarise
+  card_sha256: a35213cfb803bc7ff3a6a85b58b756521cf5aa5b239f1d48ed9a1e639a9afdff
+- id: agent-c
+  base_url: http://agent-c:8302
+  name: agent-c
+  jsonrpc_url: http://agent-c:8302/a2a
+  protocol_version: '1.0'
+  skills:
+  - summarise
+  card_sha256: f60e8671d990cb934e607a14fc76b824d6940f84a6535493416521bea8495597

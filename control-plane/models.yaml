@@ -1,0 +1,76 @@
+# R3: model catalog with governance records and synthetic prices (USD per 1k tokens).
+# Endpoints point at the local mock model server. Providers are synthetic.
+models:
+  - id: model-a
+    provider: synthetic-provider-1
+    region: eu-west
+    endpoint: http://model-server:8100/v1/chat/completions
+    capabilities: {context_length: 128000, tool_calling: true, structured_output: true}
+    price_per_1k_input: 0.0030
+    price_per_1k_output: 0.0150
+    governance_record:
+      version: GR-A-v4
+      agreement: {ref: AGR-A-2025-01, signed_at: "2025-06-01T00:00:00Z", expires_at: "2030-06-30T23:59:59Z"}
+      data_processing_terms: {ref: DPT-A-2025-01, expires_at: "2030-06-30T23:59:59Z"}
+      third_party_risk_assessment: {ref: TPRA-A-2026, rating: low, valid_until: "2030-01-31T23:59:59Z"}
+      approved_data_classes: [public, internal, confidential]
+      approved_regions: [eu-west, us-east]
+      evaluations:
+        - {use_case: UC-17, suite: claims-triage-v2, score: 0.91, date: "2026-01-05"}
+        - {use_case: UC-22, suite: desk-assist-v1, score: 0.88, date: "2026-01-20"}
+        - {use_case: UC-30, suite: research-agent-v1, score: 0.86, date: "2026-02-15"}
+        - {use_case: UC-40, suite: report-draft-v1, score: 0.90, date: "2026-03-01"}
+
+  - id: model-b
+    provider: synthetic-provider-2
+    region: eu-west
+    endpoint: http://model-server:8100/v1/chat/completions
+    capabilities: {context_length: 2048, tool_calling: false, structured_output: true}
+    price_per_1k_input: 0.0005
+    price_per_1k_output: 0.0015
+    governance_record:
+      version: GR-B-v2
+      agreement: {ref: AGR-B-2025-07, signed_at: "2025-07-01T00:00:00Z", expires_at: "2030-06-30T23:59:59Z"}
+      data_processing_terms: {ref: DPT-B-2025-07, expires_at: "2030-06-30T23:59:59Z"}
+      third_party_risk_assessment: {ref: TPRA-B-2026, rating: low, valid_until: "2030-01-31T23:59:59Z"}
+      approved_data_classes: [public, internal, confidential]
+      approved_regions: [eu-west]
+      evaluations:
+        - {use_case: UC-01, suite: sandbox-smoke-v1, score: 0.70, date: "2026-01-02"}
+        - {use_case: UC-17, suite: claims-triage-v2, score: 0.84, date: "2026-01-05"}
+        - {use_case: UC-22, suite: desk-assist-v1, score: 0.80, date: "2026-01-20"}
+        - {use_case: UC-30, suite: research-agent-v1, score: 0.78, date: "2026-02-15"}
+
+  - id: model-c
+    provider: synthetic-provider-3
+    region: eu-west
+    endpoint: http://model-server:8100/v1/chat/completions
+    capabilities: {context_length: 128000, tool_calling: true, structured_output: true}
+    price_per_1k_input: 0.0025
+    price_per_1k_output: 0.0100
+    governance_record:
+      version: GR-C-v1
+      agreement: {ref: AGR-C-2026-02, signed_at: "2026-02-01T00:00:00Z", expires_at: "2030-06-30T23:59:59Z"}
+      data_processing_terms: {ref: DPT-C-2026-02, expires_at: "2030-06-30T23:59:59Z"}
+      third_party_risk_assessment: {ref: TPRA-C-2026, rating: medium, valid_until: "2030-01-31T23:59:59Z"}
+      approved_data_classes: [public, internal, confidential]
+      approved_regions: [eu-west]
+      evaluations: []   # approved in the catalog, but not evaluated or paired for UC-17
+
+  - id: model-d
+    provider: synthetic-provider-4
+    region: eu-west
+    endpoint: http://model-server:8100/v1/chat/completions
+    capabilities: {context_length: 32000, tool_calling: true, structured_output: true}
+    price_per_1k_input: 0.0010
+    price_per_1k_output: 0.0040
+    governance_record:
+      version: GR-D-v3
+      # Expired provider agreement (scenario S5).
+      agreement: {ref: AGR-D-2024-03, signed_at: "2024-03-01T00:00:00Z", expires_at: "2026-06-30T23:59:59Z"}
+      data_processing_terms: {ref: DPT-D-2024-03, expires_at: "2030-06-30T23:59:59Z"}
+      third_party_risk_assessment: {ref: TPRA-D-2025, rating: low, valid_until: "2030-01-31T23:59:59Z"}
+      approved_data_classes: [public, internal]
+      approved_regions: [eu-west]
+      evaluations:
+        - {use_case: UC-40, suite: report-draft-v1, score: 0.89, date: "2026-03-01"}

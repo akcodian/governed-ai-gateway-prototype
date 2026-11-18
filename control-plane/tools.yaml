@@ -1,0 +1,15 @@
+# R4: MCP servers and tools. sha256 = hash of the canonical tool definition (name, description,
+# inputSchema) recorded at registration by `make register` (python -m cp_compile.register).
+mcp_servers:
+- id: mcp-docs
+  url: http://mcp-server:8200/mcp
+  tools:
+  - name: search_docs
+    class: read
+    sha256: 71cc844d374da679ea5238cc76f89bb2064cb1ff75073397250bddb7e59e2abf
+  - name: get_customer_summary
+    class: read
+    sha256: a4d3d96cce2e49921147389866f71ad29ae215d9f0301b877800faa308634ec0
+  - name: update_case
+    class: write
+    sha256: 2c36e4d9af3ec721a28d2880fbcec199af7cedebe98edbc55de826c5bd2f2450
