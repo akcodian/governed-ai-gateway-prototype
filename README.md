@@ -10,23 +10,65 @@ organisation data. The build specification is in [SPEC.md](SPEC.md).
 
 ## Architecture (paper Figure 1)
 
+```mermaid
+flowchart TB
+    subgraph CP["Control plane (offline)"]
+        direction LR
+        YAML["Registry YAML<br/>use cases · models · pairings<br/>tools · agents · allowlists · budgets<br/>R1 R3 R4 R5"]
+        REGO["Rego policies<br/>+ opa test · R6"]
+        COMPILE["make compile<br/>schemas · promotion rules<br/>expiry warnings"]
+        SNAP["Signed snapshot<br/>snapshot.json + .sig<br/>Ed25519 · config_version"]
+        YAML --> COMPILE
+        REGO --> COMPILE
+        COMPILE --> SNAP
+    end
+
+    CLIENT(["Client app or agent<br/>workload JWT"])
+
+    subgraph GW["Gateway data plane (one span per stage)"]
+        direction LR
+        S1["1 Identify<br/>credential → use case<br/>root request · R2"]
+        S2["2 Authorize<br/>default deny<br/>allowlists · R4 R6"]
+        S3["3 Budget<br/>reserve / reconcile<br/>root budget · R5"]
+        S4["4 Route<br/>signed pairing<br/>governance record<br/>breaker · capability · R3 R6"]
+        S5["5 Guard<br/>redaction<br/>counts only"]
+        S1 --> S2 --> S3 --> S4 --> S5
+    end
+
+    subgraph STATE["Policy and counters"]
+        direction LR
+        OPA["OPA<br/>authz · route · budget policies"]
+        REDIS["Redis<br/>spend · tokens/min · root budget"]
+    end
+
+    subgraph DOWN["Downstream (local mocks)"]
+        direction LR
+        MODELS["Models A–D<br/>OpenAI-compatible"]
+        MCP["MCP server<br/>tools"]
+        A2A["A2A agents b, c<br/>JSON-RPC"]
+        APPROVAL["Approval service<br/>hold · approve · timeout"]
+    end
+
+    subgraph OBS["Telemetry and evidence"]
+        direction LR
+        OTEL["OTel Collector<br/>spans · logs"]
+        KPI["KPI emitter"]
+        WH["DuckDB warehouse<br/>cost per outcome · R7"]
+        EVID["Evidence store<br/>SHA-256 hash chain · R8"]
+        KPI --> OTEL --> WH
+    end
+
+    CP -- "verified snapshot · last known good" --> GW
+    CP -- "policies + data" --> STATE
+    CLIENT --> GW
+    GW <-- "decisions · atomic counters" --> STATE
+    GW -- "calls with scoped downstream tokens · holds" --> DOWN
+    DOWN -. "delegated model calls · approved exceptions" .-> GW
+    GW -- "gov.* and gen_ai.* spans · every decision" --> OBS
+    CP -- "decision records" --> OBS
 ```
-                 control plane (offline)                         data plane (per request)
- use_cases.yaml  models.yaml  pairings.yaml           client / agent ──JWT──▶ gateway (FastAPI)
- tools.yaml agents.yaml allowlists.yaml                  1 Identify  ── workload JWT → use case (never a header)
- budgets.yaml policy_modes.yaml policies/*.rego          2 Authorize ── OPA gov.authz (default deny)
-        │ make compile                                   3 Budget    ── Redis Lua reserve/reconcile, root budget
-        ▼                                                4 Route     ── OPA gov.route + signatures + breaker + caps
- snapshot.json + snapshot.sig ──verify──▶ gateway ──push──▶ OPA      5 Guard     ── redaction (counts only)
-        │                                        │
-        ▼                                        ├─▶ mock model server (OpenAI-compatible)
- evidence/control_plane.jsonl                    ├─▶ MCP server (official SDK)    ◀─ downstream scoped token
-                                                 ├─▶ A2A agents b, c (JSON-RPC)  ◀─ downstream scoped token
-                                                 └─▶ approval service (hold / approve / timeout)
- spans ─OTLP─▶ OTel Collector ─▶ telemetry/out/spans.jsonl ─┐
- KPI events ─OTLP logs─▶ Collector ─▶ telemetry/out/logs.jsonl ─┴─▶ DuckDB ─▶ results/cost_per_outcome.csv
- every decision ─▶ evidence/*.jsonl (append-only, SHA-256 hash chain) ─▶ make verify-evidence
-```
+
+Solid arrows are the request path and configuration flow; dotted arrows are calls back into the gateway (delegated agent model calls and approved one-time exceptions). R1–R8 mark where each requirement is enforced.
 
 | Requirement | Where |
 |---|---|
