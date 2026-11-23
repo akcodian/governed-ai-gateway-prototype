@@ -47,8 +47,12 @@ def main() -> None:
            f"Results produced by code at commit `{git('rev-parse', '--short', 'HEAD') or 'n/a'}`; "
            f"paper tag `{os.environ.get('PAPER_TAG') or git('describe', '--tags', '--exact-match') or 'none yet'}`.",
            "", "All numbers below come from runs of the code in this repository (see results/*.csv). "
-           "Mocks run on one machine. Latencies are measured by a benchmark client inside the Docker compose network "
-           "(running it from the Windows host adds ~44 ms of Docker Desktop port-forwarding to every request).", "",
+           "Mocks run on one machine. " + (
+               "All services ran as local processes in one container (STACK_MODE=native, e.g. a Code Ocean "
+               "capsule); the benchmark client ran in the same container over localhost."
+               if os.environ.get("STACK_MODE") == "native" else
+               "Latencies are measured by a benchmark client inside the Docker compose network (running it from the "
+               "Windows host adds ~44 ms of Docker Desktop port-forwarding to every request)."), "",
            "## Table 3: scenarios", "",
            "| # | Scenario | Expected decision | Observed | Pass | Evidence completeness | Gateway latency p50 / p95 (ms) |",
            "|---|---|---|---|---|---|---|"]

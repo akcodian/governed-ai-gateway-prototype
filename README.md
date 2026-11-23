@@ -109,6 +109,10 @@ make all
 Approver CLI: `python -m approval_service.cli list --status pending`, then
 `python -m approval_service.cli approve <hold_id> --model model-c --approver <name>`.
 
+### Code Ocean
+
+The capsule runs everything in one container without Docker Compose. Environment setup (apt, pip, post-install script) and run instructions are in [codeocean/README.md](codeocean/README.md); the File to Run is `codeocean/run`.
+
 ## How the results map to the paper
 
 | Paper | File |

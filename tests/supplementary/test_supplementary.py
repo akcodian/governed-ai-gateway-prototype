@@ -10,7 +10,7 @@ import pytest
 
 from cp_compile.compile import write_snapshot
 from telemetry.evidence_store.store import verify_chain
-from tests.helpers import EVIDENCE_DIR, ROOT, compose, evidence_records, wait_evidence
+from tests.helpers import EVIDENCE_DIR, ROOT, evidence_records, redis_start, redis_stop, wait_evidence
 
 BUILD = ROOT / "control-plane" / "build"
 
@@ -119,12 +119,12 @@ def test_tampered_pairing_signature(clean, spans, supplementary):
 def test_redis_down_fail_modes(clean, spans, supplementary):
     stack = clean
     with supplementary("redis_fail_modes", "Redis down: fail_mode closed refuses (UC-17), fail_mode open allows and logs (UC-01)") as r:
-        compose("stop", "redis")
+        redis_stop()
         try:
             open_resp = stack.chat("uc01-notebook")
             closed_resp = stack.chat("uc17-batch-runner")
         finally:
-            compose("start", "redis")
+            redis_start()
             for _ in range(60):
                 try:
                     if stack.redis.ping():

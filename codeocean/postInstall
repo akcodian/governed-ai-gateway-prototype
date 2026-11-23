@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Code Ocean post-install script (Environment > Post-Install Script). Runs once at build time, as root,
+# from /, without access to /code. Installs the two binaries the stack needs and checks them against
+# pinned SHA-256 values from the official release pages.
+set -euo pipefail
+
+OPA_VERSION=v1.22.4
+OPA_SHA256=35e3b352e715e80624ead6c89930d8585f6f7d94cdc409eb2a9fe36620dcccba
+OTELCOL_VERSION=0.165.0
+OTELCOL_SHA256=bd6e73d94bf3359ad6fac25529a8ee308adb9b0b8a0e8af034ed3891fbe5aa33
+
+mkdir -p /opt/bin /opt/src
+cd /opt/src
+
+curl -fsSL -o opa "https://github.com/open-policy-agent/opa/releases/download/${OPA_VERSION}/opa_linux_amd64_static"
+echo "${OPA_SHA256}  opa" | sha256sum -c -
+install -m 0755 opa /opt/bin/opa
+
+OTEL_TGZ="otelcol-contrib_${OTELCOL_VERSION}_linux_amd64.tar.gz"
+curl -fsSL -o "${OTEL_TGZ}" \
+  "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v${OTELCOL_VERSION}/${OTEL_TGZ}"
+echo "${OTELCOL_SHA256}  ${OTEL_TGZ}" | sha256sum -c -
+tar -xzf "${OTEL_TGZ}" otelcol-contrib
+install -m 0755 otelcol-contrib /opt/bin/otelcol-contrib
+
+cd /
+rm -rf /opt/src
+/opt/bin/opa version | head -1
+/opt/bin/otelcol-contrib --version

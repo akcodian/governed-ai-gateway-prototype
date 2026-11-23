@@ -11,7 +11,7 @@ endif
 PY := $(VENV_PY)
 COMPOSE := docker compose
 
-.PHONY: help venv setup lock keys approve-pairings register compile up wait down fresh test-unit test \
+.PHONY: codeocean-emulate codeocean-packages help venv setup lock keys approve-pairings register compile up wait down fresh test-unit test \
         bench report verify-evidence env warehouse all ci
 
 help:
@@ -87,3 +87,12 @@ verify-evidence:
 all: setup fresh compile up test bench report verify-evidence
 
 ci: setup compile test-unit
+
+# Code Ocean: regenerate the pip list for the capsule, and emulate a capsule run locally
+# (code mounted read-only at /code, outputs in codeocean-results/).
+codeocean-packages:
+	$(PY) scripts/codeocean_packages.py
+
+codeocean-emulate:
+	docker build -f codeocean/emulate.Dockerfile -t gaigw-codeocean:local .
+	docker run --rm -v "$(CURDIR):/code:ro" -v "$(CURDIR)/codeocean-results:/results" gaigw-codeocean:local bash /code/codeocean/run

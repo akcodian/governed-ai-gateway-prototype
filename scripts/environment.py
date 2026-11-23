@@ -75,10 +75,30 @@ def main() -> None:
 
     pinned = {v for k, v in vars(g).items() if k.startswith("GEN_AI_") and isinstance(v, str)}
     diffs = [a for a in TABLE2_GENAI if a not in pinned]
-    docker_ver = run(["docker", "version", "--format", "client {{.Client.Version}} / server {{.Server.Version}}"])
-    compose_ver = run(["docker", "compose", "version", "--short"])
-    opa = ROOT / ".tools" / ("opa.exe" if platform.system() == "Windows" else "opa")
-    opa_ver = run([str(opa), "version"]).splitlines()[0] if opa.exists() else "not installed"
+    native = os.environ.get("STACK_MODE") == "native"
+    opa = Path(os.environ["OPA_BIN"]) if os.environ.get("OPA_BIN") else         ROOT / ".tools" / ("opa.exe" if platform.system() == "Windows" else "opa")
+    opa_ver = (run([str(opa), "version"]).splitlines() or ["unavailable"])[0] if opa.exists() else "not installed"
+    if native:
+        redis_ver = run([os.environ.get("REDIS_SERVER", "redis-server"), "--version"])
+        otel_ver = run([os.environ.get("OTELCOL_BIN", "otelcol-contrib"), "--version"])
+        runtime_lines = [
+            "- Services run as local processes in one container (STACK_MODE=native, scripts/native_stack.py)",
+            f"- Service Python: {platform.python_version()} (same interpreter as the tests)",
+            f"- OPA (server and CLI): {opa_ver}",
+            f"- Redis: {redis_ver}",
+            f"- OpenTelemetry Collector: {otel_ver}", "",
+        ]
+        image_lines = []
+    else:
+        docker_ver = run(["docker", "version", "--format", "client {{.Client.Version}} / server {{.Server.Version}}"])
+        compose_ver = run(["docker", "compose", "version", "--short"])
+        runtime_lines = [
+            "- Service Python (containers): 3.12.16 (python:3.12.16-slim-bookworm)",
+            f"- Docker: {docker_ver}; Compose {compose_ver}",
+            f"- OPA CLI (compile/test): {opa_ver}", "",
+        ]
+        image_lines = ["## Container images (docker-compose.yml pins tag + digest)", "",
+                       "| container | image |", "|---|---|", *[f"| {n} | `{i}` |" for n, i in images()], ""]
     pkgs = ["fastapi", "uvicorn", "httpx", "pydantic", "redis", "PyJWT", "cryptography", "mcp", "a2a-sdk",
             "opentelemetry-sdk", "opentelemetry-exporter-otlp-proto-http", "opentelemetry-semantic-conventions",
             "duckdb", "pytest"]
@@ -93,12 +113,8 @@ def main() -> None:
             "- (Host hardware redacted by default; run `python scripts/environment.py --host-details` to record it.)",
         ]),
         f"- Host Python (tests, benchmark client): {platform.python_version()}",
-        "- Service Python (containers): 3.12.16 (python:3.12.16-slim-bookworm)",
-        f"- Docker: {docker_ver}; Compose {compose_ver}",
-        f"- OPA CLI (compile/test): {opa_ver}", "",
-        "## Container images (docker-compose.yml pins tag + digest)", "",
-        "| container | image |", "|---|---|",
-        *[f"| {n} | `{i}` |" for n, i in images()], "",
+        *runtime_lines,
+        *image_lines,
         "## Python packages (exact pins in requirements.lock)", "",
         *[f"- {p} {metadata.version(p)}" for p in pkgs], "",
         "## Protocol and convention versions", "",

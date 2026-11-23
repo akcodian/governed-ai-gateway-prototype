@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Code Ocean reproducible run ("File to Run"). Reproduces every result of the paper in one container:
+# compile the control plane, start all services as local processes, run the scenarios and checks,
+# run the latency benchmark, build the report, verify the evidence chains, and copy everything to
+# /results. Nothing is written to /code; work happens in a copy under /scratch.
+set -uo pipefail
+
+CODE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WORK="${SCRATCH_DIR:-/scratch}/gaigw"
+RESULTS_OUT="${RESULTS_DIR:-/results}"
+PYTHON="${PYTHON:-python3}"
+
+export STACK_MODE=native
+export OPA_BIN="${OPA_BIN:-/opt/bin/opa}"
+export OTELCOL_BIN="${OTELCOL_BIN:-/opt/bin/otelcol-contrib}"
+export REDIS_SERVER="${REDIS_SERVER:-redis-server}"
+export GOV_KEY_DIR="${WORK}/keys"
+export PYTHONPATH="${WORK}"
+export PYTHONDONTWRITEBYTECODE=1
+export PAPER_TAG="${PAPER_TAG:-v1.0-paper}"  # recorded in results/summary.md
+
+step() { printf '\n=== %s\n' "$*"; }
+
+step "Copy code to ${WORK}"
+rm -rf "${WORK}"
+mkdir -p "${WORK}" "${RESULTS_OUT}"
+tar -C "${CODE_DIR}" \
+  --exclude=./.git --exclude=./.venv --exclude=./.tools --exclude=./.native --exclude=./keys \
+  --exclude=./.pytest_cache --exclude=./codeocean-results --exclude=./control-plane/build --exclude=./evidence --exclude=./telemetry/out --exclude=./results \
+  --exclude='__pycache__' -cf - . | tar -C "${WORK}" -xf -
+cd "${WORK}"
+
+finish() {
+  rc=$?
+  step "Stop services and collect outputs"
+  "${PYTHON}" -m scripts.native_stack stop >/dev/null 2>&1 || true
+  mkdir -p "${RESULTS_OUT}/evidence" "${RESULTS_OUT}/logs"
+  cp -r results/. "${RESULTS_OUT}/" 2>/dev/null || true
+  cp evidence/*.jsonl evidence/*.head "${RESULTS_OUT}/evidence/" 2>/dev/null || true
+  cp .native/logs/*.log "${RESULTS_OUT}/logs/" 2>/dev/null || true
+  cp control-plane/build/compile_warnings.json "${RESULTS_OUT}/" 2>/dev/null || true
+  echo "exit status ${rc}; outputs in ${RESULTS_OUT}"
+  exit "${rc}"
+}
+trap finish EXIT
+set -e
+
+step "Tool versions"
+"${PYTHON}" --version
+"${OPA_BIN}" version | head -1
+"${REDIS_SERVER}" --version
+"${OTELCOL_BIN}" --version
+
+step "Generate keys (ephemeral, never stored in the capsule) and sign pairings"
+"${PYTHON}" -m govlib.keys
+"${PYTHON}" -m cp_compile.approve_pairings
+"${PYTHON}" scripts/clean_run.py
+
+step "Compile the control plane (schemas, opa test, promotion rules, signed snapshot)"
+"${PYTHON}" -m cp_compile.compile
+
+step "Start the stack as local processes"
+"${PYTHON}" -m scripts.native_stack start
+
+step "Unit tests, scenarios S1-S8, supplementary checks"
+set +e
+"${PYTHON}" -m pytest tests -q -p no:cacheprovider
+TEST_RC=$?
+set -e
+
+step "Latency benchmark (N=${BENCH_N:-1000}, warm-up ${BENCH_WARMUP:-100})"
+"${PYTHON}" -m bench.run -n "${BENCH_N:-1000}" --warmup "${BENCH_WARMUP:-100}" --scenario-n "${BENCH_SCENARIO_N:-200}"
+
+step "Cost per outcome, environment and summary report"
+"${PYTHON}" -m telemetry.warehouse.build
+"${PYTHON}" scripts/environment.py
+"${PYTHON}" scripts/report.py
+
+step "Verify evidence hash chains"
+"${PYTHON}" -m telemetry.evidence_store.verify evidence
+
+if [ "${TEST_RC}" -ne 0 ]; then
+  echo "Some tests failed (pytest exit ${TEST_RC}); see results/scenarios.csv and results/summary.md"
+  exit "${TEST_RC}"
+fi

@@ -1,4 +1,5 @@
 # OpenTelemetry Collector (contrib): OTLP/HTTP in, JSON files out. No external backend.
+# Output folder: OTEL_OUT_DIR (default /out, as mounted in docker-compose.yml; set by scripts/native_stack.py).
 receivers:
   otlp:
     protocols:
@@ -12,13 +13,13 @@ processors:
 
 exporters:
   file/traces:
-    path: /out/spans.jsonl
+    path: ${env:OTEL_OUT_DIR:-/out}/spans.jsonl
     flush_interval: 500ms
   file/logs:
-    path: /out/logs.jsonl
+    path: ${env:OTEL_OUT_DIR:-/out}/logs.jsonl
     flush_interval: 500ms
   file/metrics:
-    path: /out/metrics.jsonl
+    path: ${env:OTEL_OUT_DIR:-/out}/metrics.jsonl
     flush_interval: 1s
 
 extensions:

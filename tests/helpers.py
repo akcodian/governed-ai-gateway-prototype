@@ -182,6 +182,27 @@ def compose(*args: str) -> None:
     subprocess.run(["docker", "compose", *args], cwd=ROOT, check=True, capture_output=True)
 
 
+# STACK_MODE=compose (default): services run under docker compose.
+# STACK_MODE=native: services run as local processes (scripts/native_stack.py, e.g. on Code Ocean).
+STACK_MODE = os.environ.get("STACK_MODE", "compose")
+
+
+def redis_stop() -> None:
+    if STACK_MODE == "native":
+        from scripts.native_stack import stop_redis
+        stop_redis()
+    else:
+        compose("stop", "redis")
+
+
+def redis_start() -> None:
+    if STACK_MODE == "native":
+        from scripts.native_stack import start_redis
+        start_redis()
+    else:
+        compose("start", "redis")
+
+
 # ------------------------------------------------------------------ result recording
 @dataclass
 class Row:
