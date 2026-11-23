@@ -36,10 +36,35 @@ SHA-256 values. All downloads happen at build time; the run needs no internet ac
 
 ## 2. Code and run
 
-1. Import the repository into the capsule's `/code` folder (Git import or upload). No data assets
-   are needed; `/data` stays empty.
-2. Set `codeocean/run` as the **File to Run**.
-3. Click **Reproducible Run**.
+1. Import the repository (**Add Capsule → Copy from public Git repository**, or clone from your
+   GitHub organization). Code Ocean imports the default branch (`main`) and places the files in the
+   capsule root, shown under **Other Files**. Only the capsule's `code` folder is mounted at `/code`
+   during a run, so move everything into `code` (step 2). No data assets are needed; `/data` stays empty.
+2. Move the repository into `code`. Either drag each item under **Other Files** (including the
+   `results` folder) into **code** in the Files panel, or run this once in a Cloud Workstation terminal:
+
+   ```bash
+   cd /root/capsule
+   shopt -s dotglob
+   for f in *; do
+     case "$f" in code|data|environment|metadata|.codeocean|.git) continue ;; esac
+     if [ "$f" = .gitignore ]; then cp .gitignore code/.gitignore; continue; fi
+     if [ "$f" = results ]; then   # the committed paper results; move the files, keep the folder
+       mkdir -p code/results
+       for r in results/*; do git mv "$r" code/results/ 2>/dev/null || mv "$r" code/results/; done
+       continue
+     fi
+     git mv "$f" code/ 2>/dev/null || mv "$f" code/
+   done
+   ls code   # expect: codeocean, gateway, tests, results, ... and Makefile, README.md, LICENSE
+   ```
+
+   Then commit the change in the capsule.
+3. Set `code/codeocean/run` as the **File to Run**.
+4. Click **Reproducible Run**.
+
+Import `main`, not the `v1.0-paper` tag, unless the tag has been moved to a commit that contains this
+`codeocean/` folder.
 
 The run copies `/code` to `/scratch`, generates throw-away signing keys there (keys are never stored in
 the capsule), compiles the control plane, starts the stack, runs all tests, the benchmark and the report,
